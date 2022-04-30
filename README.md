@@ -93,6 +93,7 @@ content = '您的NAS已恢复市电供电' #内容
 ### 3.4全部操作完成后，手动运行一次ups_init.sh 在开启定时任务ups_scan.sh 即可监控了
 ·
 > 运行效果：
+
 ![图片](https://user-images.githubusercontent.com/76721799/166113289-048d32b3-0f97-481f-9a47-e0294515d7f6.png)
 ![图片](https://user-images.githubusercontent.com/76721799/166113354-d59db9b7-32ca-4479-b142-ea54516bee06.png)
 （演示效果）
