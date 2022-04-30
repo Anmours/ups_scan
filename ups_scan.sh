@@ -72,7 +72,7 @@ else	#false
                 python3 $recovery_mail  #执行py脚本发送邮件通知 恢复市电
             else #false
                 synologset1 sys warn 0x11600035 #写入群辉系统日志 即将关机
-                echo "$(date -d today +"%Y-%m-%d%H:%M:%S")：检查 [$name1 和 $name2] 均失败，控制NAS关机。" | tee -a  $tmpfile   #写日志
+                echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1 和 $name2] 均失败，控制NAS关机。" | tee -a  $tmpfile   #写日志
                 python3 $shutdown_mail 	#执行py脚本发送邮件通知 NAS已关机
                 sleep 3s  #等待3s
                 # cp -f $tmpfile $logfile	# 关机前复制临时中的日志到宿主机 #群辉通过关机触发脚本实现，其他平台取消注释
