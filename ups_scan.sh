@@ -24,12 +24,12 @@ name2=空调	#设备名称2
 DelayTime=480s		 #复检等待时间
 
 #启用临时文件路径，以支持硬盘休眠
-tmpfile=/tmp/ups/ups.log		    #临时文件路径
-logfile=/volume1/ups/ups.log	    #宿主机日志路径
+tmpfile=/tmp/ups/ups.log        #临时文件路径
+logfile=/volume1/ups/ups.log	#宿主机日志路径
 logfile_route=/volume1/ups/log/ #宿主机历史日志目录
 
 #邮件通知脚本文件路径
-stop_mail=/volume1/ups/mail_py/stop_mail.py	        #停电通知邮件脚本
+stop_mail=/volume1/ups/mail_py/stop_mail.py	    #停电通知邮件脚本
 recovery_mail=/volume1/ups/mail_py/recovery_mail.py #恢复正常通知邮件脚本
 shutdown_mail=/volume1/ups/mail_py/shutdown_mail.py #关机通知脚本
 ####################-- 配置区 --##############################################
@@ -42,40 +42,41 @@ if [[ $(du $tmpfile | awk -F ' ' '{print$1}') -gt "100" ]]
     :>$tmpfile
 fi
 
+
 #监控 UPS
-if ping $Monitor1 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null  #ping设备1中是否带bytes from字样
+if ping $Monitor1 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null  #ping设备1
 then	#true
-    echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1] 正常。" | tee -a  $tmpfile	#写日志
+    echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]正常。" | tee -a  $tmpfile #写日志
 else	#false
-    if ping $Monitor2 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null #ping设备2
+    if ping $Monitor2 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null  #ping设备2
     then
-        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1] 失败，检查 [$name2] 正常。" | tee -a  $tmpfile	#写日志
-        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：您的 [$name1] 设备异常，请确认其状态.." | tee -a  $tmpfile	#写日志
+        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]失败，检查[$name2]正常。" | tee -a  $tmpfile    #写日志
+        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：您的[$name1]设备异常，请确认其状态.." | tee -a  $tmpfile     #写日志
     else
-        synologset1 sys warn 0x11600036		#写入群辉系统日志 已断开市电
-        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1 和 $name2]全失败，UPS已经断开市电，$DelayTime 后复检····" | tee -a  $tmpfile    #写日志
-        python3 $stop_mail  #执行py脚本发送邮件通知 已断开市电
+        synologset1 sys warn 0x11600036	  #写入群辉系统日志已断开市电
+        echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]和[$name2]全失败，UPS已经断开市电，$DelayTime后复检····" | tee -a  $tmpfile  #写日志
+        python3 $stop_mail  #执行py脚本发送邮件通知 已断开市电，不需要请注释
         
-        sleep $DelayTime #休眠设定的时间
+        sleep $DelayTime   #休眠
         
-        if ping $Monitor1 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null	#到达休眠时间，重新ping设备1
+        if ping $Monitor1 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null #到达休眠时间，复检ping设备1
         then  #true
-            synologset1 sys warn 0x11600037	#写入群辉系统日志 恢复市电
-            echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1]成功，已恢复市电，退出复检。" | tee -a  $tmpfile #写日志
-            python3 $recovery_mail  #执行py脚本发送邮件通知 恢复市电
+            synologset1 sys warn 0x11600037  #写入群辉系统日志恢复市电
+            echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]成功，已恢复市电，退出复检。" | tee -a  $tmpfile  #写日志
+            python3 $recovery_mail  #执行py脚本发送邮件通知 恢复市电，不需要请注释
         else	#false
-            if ping $Monitor2 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null # 继续ping设备2
+            if ping $Monitor2 -W 2 -w 2 -c 2 | grep ' bytes from ' > /dev/null #继续ping设备2
             then #true
-                synologset1 sys warn 0x11600037	#写入群辉系统日志 恢复电力
-                echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1]失败，检查 [$name2] 正常。" | tee -a  $tmpfile	#写日志
-				echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：您的 [$name1] 设备异常，请确认其状态.." | tee -a  $tmpfile	    #写日志
-                python3 $recovery_mail  #执行py脚本发送邮件通知 恢复市电
+                synologset1 sys warn 0x11600037	#写入群辉系统日志恢复电力
+                echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]失败，检查[$name2]正常，已恢复市电，退出复检...." | tee -a  $tmpfile #写日志
+		echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：您的[$name1]设备异常，请确认其状态.." | tee -a  $tmpfile #写日志
+                python3 $recovery_mail  #执行py脚本发送邮件通知 恢复市电，不需要请注释
             else #false
                 synologset1 sys warn 0x11600035 #写入群辉系统日志 即将关机
-                echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查 [$name1 和 $name2] 均失败，控制NAS关机。" | tee -a  $tmpfile   #写日志
-                python3 $shutdown_mail 	#执行py脚本发送邮件通知 NAS已关机
+                echo "$(date -d today +"%Y-%m-%d %H:%M:%S")：检查[$name1]和[$name2]均失败，控制NAS关机。" | tee -a  $tmpfile  #写日志
+                python3 $shutdown_mail 	#执行py脚本发送邮件通知 NAS已关机，不需要请注释
                 sleep 3s  #等待3s
-                # cp -f $tmpfile $logfile	# 关机前复制临时中的日志到宿主机 #群辉通过关机触发脚本实现，其他平台取消注释
+                # cp -f $tmpfile $logfile	 # 关机前复制临时中的日志到宿主机 #群辉通过关机触发脚本实现，其他平台取消注释
                 shutdown -P +0	#+0或now代表立即关机，+1 一分钟后关机，自行定义
             fi
         fi
